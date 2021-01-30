@@ -165,7 +165,10 @@ class KristianHTTPClient
         }
 
         $out = curl_exec($ch);
-        //var_dump($out);
+        //echo "out"; var_dump($out);
+        //echo "ch"; var_dump($ch);
+        //echo "chinfo"; var_dump(curl_getinfo($ch));
+
         $response = $out;
         $header_size = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
         $header = substr($response, 0, $header_size);
