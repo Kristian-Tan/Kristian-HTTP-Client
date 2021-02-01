@@ -11,7 +11,7 @@ before_script:
   #- apt-get install -yqq git libmcrypt-dev libpq-dev libcurl4-gnutls-dev libicu-dev libvpx-dev libjpeg-dev libpng-dev libxpm-dev zlib1g-dev libfreetype6-dev libxml2-dev libexpat1-dev libbz2-dev libgmp3-dev libldap2-dev unixodbc-dev libsqlite3-dev libaspell-dev libsnmp-dev libpcre3-dev libtidy-dev libonig-dev
   #- apt-get install -yqq git libmcrypt-dev libpq-dev libcurl4-gnutls-dev libicu-dev libvpx-dev libxpm-dev zlib1g-dev libfreetype6-dev libxml2-dev libexpat1-dev libbz2-dev
   #- apt-get install -yqq git libcurl4-gnutls-dev
-  - apt-get install -yqq stunnel4
+  #- apt-get install -yqq stunnel4
   # Install PHP extensions
   #- docker-php-ext-install mbstring pdo_mysql mysqli curl json intl xml opcache
   #- docker-php-ext-install curl json opcache
@@ -21,8 +21,8 @@ before_script:
   #- pecl install mcrypt
   #- docker-php-ext-enable mcrypt
   # Install and run Composer
-  #- curl -sS https://getcomposer.org/installer | php
-  #- php composer.phar install
+  - curl -sS https://getcomposer.org/installer | php
+  - php composer.phar install
 
 # Bring in any services we need http://docs.gitlab.com/ee/ci/docker/using_docker_images.html#what-is-a-service
 # See http://docs.gitlab.com/ce/ci/services/README.html for examples.
@@ -43,13 +43,15 @@ test:
     ##- sleep 20
     ##- vendor/bin/phpunit --configuration phpunit.xml --coverage-text --colors=never
     #- vendor/bin/phpunit --configuration tests/phpunit_gitlab.xml --testdox tests/
-    - stunnel -version
-    - stunnel -help
-    - echo "[https]" >> /etc/stunnel/stunnel.conf
-    - echo "accept = 8081" >> /etc/stunnel/stunnel.conf
-    - echo "connect = 8080" >> /etc/stunnel/stunnel.conf
-    - echo "cert = test/cert.pem" >> /etc/stunnel/stunnel.conf
+    #- stunnel -version
+    #- stunnel -help
+    #- echo "[https]" >> /etc/stunnel/stunnel.conf
+    #- echo "accept = 8081" >> /etc/stunnel/stunnel.conf
+    #- echo "connect = 8080" >> /etc/stunnel/stunnel.conf
+    #- echo "cert = test/cert.pem" >> /etc/stunnel/stunnel.conf
+    - composer global require mpyw/php-hyper-builtin-server:^3.0
     - pwd
     - cd tests
-    - php -S 0.0.0.0:8080 &
+    #- php -S 0.0.0.0:8080 &
+    - ./vendor/bin/hyper-run -S 0.0.0.0:8080 -s 0.0.0.0:8081 -t . &
     - php run.php -hlocalhost:8080 -p -s
