@@ -17,8 +17,8 @@ $uriHost = "dev244.ubaya.ac.id";
 $uriPrefix = "/pwa-starter-demo-min3/kristian-http-client/tests";
 
 $options = getopt("h::p::");
-if(!empty($options["h"])) $uriHost = $options["h"];
-if(!empty($options["p"])) $uriPrefix = $options["p"];
+if(isset($options["h"])) $uriHost = $options["h"];
+if(isset($options["p"])) $uriPrefix = $options["p"];
 
 $testParameters = array(
     array(
