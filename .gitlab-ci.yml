@@ -12,7 +12,7 @@ before_script:
   #- apt-get install -yqq git libmcrypt-dev libpq-dev libcurl4-gnutls-dev libicu-dev libvpx-dev libxpm-dev zlib1g-dev libfreetype6-dev libxml2-dev libexpat1-dev libbz2-dev
   #- apt-get install -yqq git libcurl4-gnutls-dev
   #- apt-get install -yqq stunnel4
-  - apt-get install -yqq zip git
+  - apt-get install -yqq unzip git
   # Install PHP extensions
   #- docker-php-ext-install mbstring pdo_mysql mysqli curl json intl xml opcache
   #- docker-php-ext-install curl json opcache
