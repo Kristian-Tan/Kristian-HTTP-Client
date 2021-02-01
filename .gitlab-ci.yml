@@ -44,4 +44,4 @@ test:
     #- vendor/bin/phpunit --configuration tests/phpunit_gitlab.xml --testdox tests/
     - cd tests
     - php -S 0.0.0.0:8080 &
-    - php run.php -hlocalhost:8080 -p
+    - php run.php -hlocalhost:8080 -p -s

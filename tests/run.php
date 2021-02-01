@@ -19,6 +19,7 @@ $uriPrefix = "/pwa-starter-demo-min3/kristian-http-client/tests";
 $options = getopt("h::p::");
 if(isset($options["h"])) $uriHost = $options["h"];
 if(isset($options["p"])) $uriPrefix = $options["p"];
+$isSkipHttps = isset($options["s"]);
 
 $testParameters = array(
     array(
@@ -116,6 +117,11 @@ foreach ($testParameters as $idx => $testParameter) {
     $api = $testParameter["api"];
     echo "\r\n\r\nRUN #".($idx+1)."/".count($testParameters)."\r\n";
     print_r($testParameter);
+
+    if($uriSchema == "https://" && $isSkipHttps == true) {
+        echo "HTTPS test skipped! \r\n";
+        continue;
+    }
 
     file_put_contents("dumprequest.json", "");
     assertEq("", file_get_contents("dumprequest.json"));
