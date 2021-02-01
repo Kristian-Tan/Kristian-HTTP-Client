@@ -14,7 +14,12 @@ function assertEq($expected, $real, $msg=null, $dumpOnError=null) {
 }
 
 $uriHost = "dev244.ubaya.ac.id";
-$uriPrefix = "/pwa-starter-demo-min3/kristian-http-client/tests"; 
+$uriPrefix = "/pwa-starter-demo-min3/kristian-http-client/tests";
+
+$options = getopt("h::p::");
+if(!empty($options["h"])) $uriHost = $options["h"];
+if(!empty($options["p"])) $uriPrefix = $options["p"];
+
 $testParameters = array(
     array(
         "uriPathToCaptureRequest" => $uriPrefix."/capture_request_json.php", 
