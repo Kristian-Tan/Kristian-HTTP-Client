@@ -1,4 +1,6 @@
 {
+    "name": "Kristian-Tan/Kristian-HTTP-Client",
+    "description": "Synchronous HTTP client for php. Only a simple abstraction over php's curl and file_get_contents API.",
     "require-dev": {
         "mpyw/php-hyper-builtin-server": "^3.0"
     }
