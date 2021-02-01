@@ -57,4 +57,5 @@ test:
     - php composer.phar install
     #- php -S 0.0.0.0:8080 &
     - ./vendor/bin/hyper-run -S 0.0.0.0:8080 -s 0.0.0.0:8081 -t . &
+    - sleep 20
     - php run.php -hlocalhost:8080 -p -s
