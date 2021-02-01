@@ -4,11 +4,13 @@ class KristianHTTPClient
 {
     // input
     public $request_url = "http://localhost/"; // http://kristian.ax.lt/api/handler.php
+    public $request_port = null; // if null then use default port (80 for http and 443 for https)
     public $request_header = array(); // ['Authorization' => 'Bearer vwhr....xxyz']
     public $request_method = "GET"; // GET/POST/DELETE/PATCH/PUT/HEAD/...
     public $request_body = null;
     public $php_api = "file_get_contents"; // file_get_contents ATAU curl
     public $ssl_cacert_file = "cacert.pem"; // use path to cacert file
+    public $ssl_cacert_directory = "/etc/ssl/certs"; // use path to cacert directory
     public $ssl_verify = true; // change to false to disable ssl verification (insecure)
 
     // output
@@ -51,19 +53,16 @@ class KristianHTTPClient
 
         // use key 'http' even if you send the request to https://...
         $options = array();
-        $options["http"] = array(
-            'header'  => $stringHeader,
-            'method'  => $this->request_method,
-            'content' => $this->request_body,
-            'ignore_errors' => true, // silence warning if response code = 404
-        );
+        $options["http"] = array();
+        $options["http"]["header"] = $stringHeader;
+        $options["http"]["method"] = $this->request_method;
+        $options["http"]["content"] = $this->request_body;
+        $options["http"]["ignore_errors"] = true; // silence warning if response code = 404
         if($this->ssl_verify && $this->is_https())
         {
-            $options["http"] = array(
-                'cafile'  => $this->ssl_cacert_file_path(),
-                'verify_peer'  => true,
-                'verify_peer_name' => true,
-            );
+            if(!empty($this->ssl_cacert_file_path())) $options["http"]["cafile"] = $this->ssl_cacert_file_path();
+            $options["http"]["verify_peer"] = true;
+            $options["http"]["verify_peer_name"] = true;
         }
 
         // make request
@@ -86,6 +85,9 @@ class KristianHTTPClient
 
     private function make_request_curl()
     {
+        $tryport = parse_url($this->request_url, PHP_URL_PORT);
+        if(!empty($tryport) && empty($this->request_port)) $this->request_port = $tryport;
+
         $arrHeaders = array();
         foreach ($this->request_header as $header)
         {
@@ -120,7 +122,8 @@ class KristianHTTPClient
             {
                 curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true); //use this for more secure SSL verification
                 curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
-                curl_setopt ($ch, CURLOPT_CAINFO, $this->ssl_cacert_file_path());
+                if(!empty($this->ssl_cacert_file_path())) curl_setopt ($ch, CURLOPT_CAINFO, $this->ssl_cacert_file_path());
+                if(!empty($this->ssl_cacert_directory_path())) curl_setopt ($ch, CURLOPT_CAPATH, $this->ssl_cacert_directory_path());
             }
             else
             {
@@ -131,6 +134,15 @@ class KristianHTTPClient
         else
         {
             curl_setopt($ch, CURLOPT_PORT, 80);
+        }
+        if(!empty($this->request_port))
+        {
+            curl_setopt($ch, CURLOPT_PORT, $this->request_port);
+        }
+
+        if( $this->request_body != null && $this->request_body != "")
+        {
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $this->request_body);
         }
 
         if( strtoupper($this->request_method) == "GET")
@@ -159,15 +171,11 @@ class KristianHTTPClient
             curl_setopt($ch, CURLOPT_CUSTOMREQUEST, strtoupper($this->request_method));
         }
 
-        if( $this->request_body != null && $this->request_body != "")
-        {
-            curl_setopt($ch, CURLOPT_POSTFIELDS, $this->request_body);
-        }
-
         $out = curl_exec($ch);
         //echo "out"; var_dump($out);
         //echo "ch"; var_dump($ch);
         //echo "chinfo"; var_dump(curl_getinfo($ch));
+        //echo "error"; var_dump(curl_error($ch));
 
         $response = $out;
         $header_size = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
@@ -208,6 +216,15 @@ class KristianHTTPClient
 
     protected function ssl_cacert_file_path()
     {
-        return getcwd() . $this->ssl_cacert_file;
+        $result = getcwd() . $this->ssl_cacert_file;
+        if(file_exists($result)) return $result;
+        else return null;
+    }
+
+    protected function ssl_cacert_directory_path()
+    {
+        $result = getcwd() . $this->ssl_cacert_directory;
+        if(file_exists($result)) return $result;
+        else return null;
     }
 }

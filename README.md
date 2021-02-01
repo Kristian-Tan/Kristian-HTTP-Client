@@ -14,6 +14,7 @@ var_dump($client->response_code);
 
 ### Inputs
 - request_url = string
+- request_port = int (if not set, will default to 80 for http and 443 for https)
 - request_header = array (default empty array),
     may be filled with ```["MyKey1: MyValue1","MyKey2: MyValue2"] ``` or ```[["MyKey1"=>"MyValue1"],["MyKey2"=>"MyValue2"]]```
 - request_method = string (default "GET")
