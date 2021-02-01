@@ -63,11 +63,15 @@ class KristianHTTPClient
             if(!empty($this->ssl_cacert_file_path())) $options["http"]["cafile"] = $this->ssl_cacert_file_path();
             $options["http"]["verify_peer"] = true;
             $options["http"]["verify_peer_name"] = true;
+            $options["ssl"]["verify_peer"] = true;
+            $options["ssl"]["verify_peer_name"] = true;
         }
         else if(!$this->ssl_verify && $this->is_https())
         {
             $options["http"]["verify_peer"] = false;
             $options["http"]["verify_peer_name"] = false;
+            $options["ssl"]["verify_peer"] = false;
+            $options["ssl"]["verify_peer_name"] = false;
         }
 
         // make request
