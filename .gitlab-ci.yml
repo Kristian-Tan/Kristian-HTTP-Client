@@ -50,10 +50,10 @@ test:
     #- echo "connect = 8080" >> /etc/stunnel/stunnel.conf
     #- echo "cert = test/cert.pem" >> /etc/stunnel/stunnel.conf
     #- composer global require mpyw/php-hyper-builtin-server:^3.0
-    - composer install
     - pwd
     # /builds/kristiant/kristian-http-client
     - cd tests
+    - composer install
     #- php -S 0.0.0.0:8080 &
     - ./vendor/bin/hyper-run -S 0.0.0.0:8080 -s 0.0.0.0:8081 -t . &
     - php run.php -hlocalhost:8080 -p -s
