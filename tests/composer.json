@@ -1,0 +1,5 @@
+{
+    "require-dev": {
+        "mpyw/php-hyper-builtin-server": "^3.0"
+    }
+}
