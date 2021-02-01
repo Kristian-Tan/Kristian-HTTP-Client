@@ -45,6 +45,11 @@ test:
     #- vendor/bin/phpunit --configuration tests/phpunit_gitlab.xml --testdox tests/
     - stunnel -version
     - stunnel -help
+    - echo "[https]" >> /etc/stunnel/stunnel.conf
+    - echo "accept = 8081" >> /etc/stunnel/stunnel.conf
+    - echo "connect = 8080" >> /etc/stunnel/stunnel.conf
+    - echo "cert = test/cert.pem" >> /etc/stunnel/stunnel.conf
+    - pwd
     - cd tests
     - php -S 0.0.0.0:8080 &
     - php run.php -hlocalhost:8080 -p -s
