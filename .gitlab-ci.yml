@@ -21,7 +21,7 @@ before_script:
   #- pecl install mcrypt
   #- docker-php-ext-enable mcrypt
   # Install and run Composer
-  - curl -sS https://getcomposer.org/installer | php
+  #- curl -sS https://getcomposer.org/installer | php
   #- php composer.phar install
 
 # Bring in any services we need http://docs.gitlab.com/ee/ci/docker/using_docker_images.html#what-is-a-service
@@ -53,7 +53,8 @@ test:
     - pwd
     # /builds/kristiant/kristian-http-client
     - cd tests
-    - composer install
+    - curl -sS https://getcomposer.org/installer | php
+    - php composer.phar install
     #- php -S 0.0.0.0:8080 &
     - ./vendor/bin/hyper-run -S 0.0.0.0:8080 -s 0.0.0.0:8081 -t . &
     - php run.php -hlocalhost:8080 -p -s
