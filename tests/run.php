@@ -16,7 +16,7 @@ function assertEq($expected, $real, $msg=null, $dumpOnError=null) {
 $uriHost = "dev244.ubaya.ac.id";
 $uriPrefix = "/pwa-starter-demo-min3/kristian-http-client/tests";
 
-$options = getopt("h::p::");
+$options = getopt("h::p::s::");
 if(isset($options["h"])) $uriHost = $options["h"];
 if(isset($options["p"])) $uriPrefix = $options["p"];
 $isSkipHttps = isset($options["s"]);
