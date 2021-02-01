@@ -56,6 +56,6 @@ test:
     - curl -sS https://getcomposer.org/installer | php
     - php composer.phar install
     #- php -S 0.0.0.0:8080 &
-    - ./vendor/bin/hyper-run -S 0.0.0.0:8080 -s 0.0.0.0:8081 -t . &
+    - ./vendor/bin/hyper-run -S 0.0.0.0:80 -s 0.0.0.0:443 -t . &
     - sleep 20
-    - php run.php -hlocalhost:8080 -p -s
+    - php run.php -hlocalhost -p
