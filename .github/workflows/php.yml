@@ -40,6 +40,6 @@ jobs:
     - name: Run test suite
       run: |
         cd tests
-        ./vendor/bin/hyper-run -S 0.0.0.0:80 -s 0.0.0.0:443 -t . &
+        sudo ./vendor/bin/hyper-run -S 0.0.0.0:80 -s 0.0.0.0:443 -t . &
         sleep 20
         php run.php -hlocalhost -p
