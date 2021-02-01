@@ -16,10 +16,11 @@ function assertEq($expected, $real, $msg=null, $dumpOnError=null) {
 $uriHost = "dev244.ubaya.ac.id";
 $uriPrefix = "/pwa-starter-demo-min3/kristian-http-client/tests";
 
-$options = getopt("h::p::s::");
+$options = getopt("h::p::s::v::");
 if(isset($options["h"])) $uriHost = $options["h"];
 if(isset($options["p"])) $uriPrefix = $options["p"];
 $isSkipHttps = isset($options["s"]);
+$isVerifySsl = isset($options["v"]);
 
 $testParameters = array(
     array(
@@ -146,6 +147,7 @@ foreach ($testParameters as $idx => $testParameter) {
     $body = array("body-key-1"=>"body-value-1", "body-key-2"=>"body-value-2", "body-key-3"=>"body-value-3", "body-key-rand"=>$rand2);
     $client->request_body = json_encode($body);
     $client->php_api = $api;
+    $client->ssl_verify = $isVerifySsl;
     $client->execute();
 
     //var_dump($client);

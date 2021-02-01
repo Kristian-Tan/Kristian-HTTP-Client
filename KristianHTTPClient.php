@@ -64,6 +64,11 @@ class KristianHTTPClient
             $options["http"]["verify_peer"] = true;
             $options["http"]["verify_peer_name"] = true;
         }
+        else if(!$this->ssl_verify && $this->is_https())
+        {
+            $options["http"]["verify_peer"] = false;
+            $options["http"]["verify_peer_name"] = false;
+        }
 
         // make request
         $this->response_body = file_get_contents($this->request_url, false, stream_context_create($options));
