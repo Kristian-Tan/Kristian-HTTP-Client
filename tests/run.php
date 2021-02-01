@@ -22,6 +22,9 @@ if(isset($options["p"])) $uriPrefix = $options["p"];
 $isSkipHttps = isset($options["s"]);
 $isVerifySsl = isset($options["v"]);
 
+if($isSkipHttps) echo "skipping https tests";
+if($isVerifySsl) echo "not verifying ssl certificate";
+
 $testParameters = array(
     array(
         "uriPathToCaptureRequest" => $uriPrefix."/capture_request_json.php", 
