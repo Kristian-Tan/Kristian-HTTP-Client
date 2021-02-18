@@ -12,6 +12,7 @@ class KristianHTTPClient
     public $ssl_cacert_file = "cacert.pem"; // use path to cacert file
     public $ssl_cacert_directory = "/etc/ssl/certs"; // use path to cacert directory
     public $ssl_verify = true; // change to false to disable ssl verification (insecure)
+    public $request_http_proxy = null; // "localhost:3128" (for example: squid http proxy)
 
     // output
     public $response_code = 0; // 200, 404, ...
@@ -60,7 +61,8 @@ class KristianHTTPClient
         $options["http"]["ignore_errors"] = true; // silence warning if response code = 404
         if($this->ssl_verify && $this->is_https())
         {
-            if(!empty($this->ssl_cacert_file_path())) $options["http"]["cafile"] = $this->ssl_cacert_file_path();
+            $temp = $this->ssl_cacert_file_path();
+            if(!empty($temp)) $options["http"]["cafile"] = $this->ssl_cacert_file_path();
             //$options["http"]["verify_peer"] = true;
             //$options["http"]["verify_peer_name"] = true;
             $options["ssl"]["verify_peer"] = true;
@@ -72,6 +74,12 @@ class KristianHTTPClient
             //$options["http"]["verify_peer_name"] = false;
             $options["ssl"]["verify_peer"] = false;
             $options["ssl"]["verify_peer_name"] = false;
+        }
+
+        if(!empty($this->request_http_proxy))
+        {
+            $options["http"]["proxy"] = "tcp://".$this->request_http_proxy; // ex: 'tcp://192.168.0.2:3128'
+            $options["http"]["request_fulluri"] = true;
         }
 
         // make request
@@ -131,8 +139,10 @@ class KristianHTTPClient
             {
                 curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true); //use this for more secure SSL verification
                 curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
-                if(!empty($this->ssl_cacert_file_path())) curl_setopt ($ch, CURLOPT_CAINFO, $this->ssl_cacert_file_path());
-                if(!empty($this->ssl_cacert_directory_path())) curl_setopt ($ch, CURLOPT_CAPATH, $this->ssl_cacert_directory_path());
+                $temp = $this->ssl_cacert_file_path();
+                if(!empty($temp)) curl_setopt ($ch, CURLOPT_CAINFO, $this->ssl_cacert_file_path());
+                $temp = $this->ssl_cacert_directory_path();
+                if(!empty($temp)) curl_setopt ($ch, CURLOPT_CAPATH, $this->ssl_cacert_directory_path());
             }
             else
             {
@@ -178,6 +188,11 @@ class KristianHTTPClient
         else
         {
             curl_setopt($ch, CURLOPT_CUSTOMREQUEST, strtoupper($this->request_method));
+        }
+
+        if(!empty($this->request_http_proxy))
+        {
+            curl_setopt($ch, CURLOPT_PROXY, $this->request_http_proxy); // ex: 'tcp://192.168.0.2:3128'
         }
 
         $out = curl_exec($ch);
