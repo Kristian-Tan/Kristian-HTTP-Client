@@ -10,28 +10,13 @@ pipelines:
   default:
     - parallel:
         - step:
-            name: go to tests directory
+            name: test
             script:
               - pwd
               - cd tests
-            caches:
-              - composer
-        - step:
-            name: install with composer then run with hyper-run
-            script:
               - composer install
               - ./vendor/bin/hyper-run -S 0.0.0.0:80 -s 0.0.0.0:443 -t . &
-            caches:
-              - composer
-        - step:
-            name: wait
-            script:
               - sleep 20
-            caches:
-              - composer
-        - step:
-            name: run test
-            script:
               - php run.php -hlocalhost -p
             caches:
               - composer
