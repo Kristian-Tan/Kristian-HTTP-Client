@@ -18,7 +18,7 @@ pipelines:
               - date
               - ./vendor/bin/hyper-run -S 0.0.0.0:80 -s 0.0.0.0:443 -t . &
               - date
-              - sleep 20
+              - sleep 5
               - date
               - php run.php -hlocalhost -p
             caches:
