@@ -105,6 +105,15 @@ class KristianHTTPClient
         $tryport = parse_url($this->request_url, PHP_URL_PORT);
         if(!empty($tryport) && empty($this->request_port)) $this->request_port = $tryport;
 
+        if( $this->is_json($this->request_body) )
+        {
+            $this->request_header[] = array("Content-type", "application/json");
+        }
+        else if( $this->request_body != null && $this->request_body != "" )
+        {
+            $this->request_header[] = array("Content-type", "application/x-www-form-urlencoded");
+        }
+        
         $arrHeaders = array();
         foreach ($this->request_header as $header)
         {
@@ -114,14 +123,6 @@ class KristianHTTPClient
                 $arrHeaders[] = $header;
         }
 
-        if( $this->is_json($this->request_body) )
-        {
-            $this->request_header[] = array("Content-type", "application/json");
-        }
-        else if( $this->request_body != null && $this->request_body != "" )
-        {
-            $this->request_header[] = array("Content-type", "application/x-www-form-urlencoded");
-        }
         if( $this->request_body == null ) $this->request_body = "";
 
         $ch = curl_init($this->request_url);
