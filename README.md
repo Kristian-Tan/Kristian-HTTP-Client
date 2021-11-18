@@ -3,6 +3,8 @@
 ## Dependency
 - PHP: minimum version 5.3, curl or file_get_contents
 - For automated tests only: composer, git, unzip
+- The goal of this project is to be of maximum compatibility with php of any version
+- PHP 5.3 minimum above is only assumed because it's the lowest php version this library has been tested against, if its known to be compatible with lower version, please report so I can update the above information
 
 ## Usage
 ```php
@@ -19,7 +21,7 @@ var_dump($client->response_code);
 - `request_header` = array (default empty array), should be filled with `["MyKey1: MyValue1","MyKey2: MyValue2"] `
 - `request_method` = string (default "GET")
 - `request_body` = string (default null), request body (also called post variable) that can be assigned to contain json (must not be set if using curl api with http GET method)
-- `php_api` = string enum "file_get_contents" or "curl" (default "file_get_contents"), php api to be used when making request
+- `php_api` = string enum "file_get_contents" or "curl" or "gnu_curl" (default "file_get_contents"), php api to be used when making request
 - `ssl_verify` = boolean (default true),
 - `ssl_cacert_file` = string (default "cacert.pem"), path to cacert file
 - `ssl_cacert_directory` = string (default "/etc/ssl/certs"), path to cacert directory (for curl api only)
@@ -46,3 +48,9 @@ var_dump($client->response_code);
     - flag `-v` forces ssl (https) host name verification against ca certificate (without this flag, the tests skips ssl verification by default; this behavior is intentional for easier test and easier integrations with ci/cd tools)
     - please note that the tests are just making a custom http request to local machine to file `tests/capture_request_json.php`, and that script will save the request content into json file `tests/capture_request_json.php`, which will be read and compared by the actual request
     - test coverage are 12 tests using method `GET`, `POST`, and `PUT`; using schema `HTTP` and `HTTPS`; using `curl` and `file_get_content` api
+
+### GNU CURL API
+- for systems without curl php extension enabled, and when file_get_contents also broke (e.g.: http headers spilling into response body or getaddrinfo error), and you also don't have sudo/admin to the target machine, then php_api=gnu_curl may be tried
+- first, install curl via your package manager (or if you don't have root or if your package manager is no longer supported, download a statically linked curl binary from https://github.com/moparisthebest/static-curl)
+- set the permission of curl binary to be executable (it should be automatic if installing via package manager, otherwise it can be done with: ```chmod a+x ./bin/curl```, assuming you put it in ./bin inside your php directory)
+- add the directory that contains curl binary to PATH variable (it should be automatic if installing via package manager, otherwise it can be done with such php code: ```putenv("PATH=".getenv("PATH").":".getcwd()."/bin");```, assuming you put it in ./bin inside your php directory)

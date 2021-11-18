@@ -224,6 +224,127 @@ class KristianHTTPClient
         }
     }
 
+    private function make_request_gnu_curl()
+    {
+        if($this->request_header == null)
+        {
+            $this->request_header = array();
+        }
+
+        if( $this->is_json($this->request_body) )
+        {
+            $this->request_header[] = array("Content-type", "application/json");
+        }
+        else if( $this->request_body != null && $this->request_body != "" )
+        {
+            $this->request_header[] = array("Content-type", "application/x-www-form-urlencoded");
+        }
+        if( $this->request_body == null ) $this->request_body = "";
+
+        $stringHeader = array();
+
+        foreach ($this->request_header as $header)
+        {
+            if( is_array($header) && count($header) == 2 )
+                $stringHeader[] = $header[0] . ": " . $header[1];
+            else
+                $stringHeader[] = $header;
+        }
+
+        // sanitize (because it will be executed on os shell)
+        $this->request_url = str_replace("'", "", $this->request_url);
+        $this->request_method = str_replace("'", "", $this->request_method);
+        foreach ($this->request_header as $key => $value) $this->request_header[$key] = str_replace("'", "", $value);
+        $this->request_http_proxy = str_replace("'", "", $this->request_http_proxy);
+
+
+        $curl_short = "curl '".$this->request_url."' ";
+        $curl_long  = "curl '".$this->request_url."' ";
+        $wget_short = "wget '".$this->request_url."' ";
+        $wget_long  = "wget '".$this->request_url."' ";
+
+        // request method (note that wget can only use GET method)
+        $curl_short .= "-X        '".$this->request_method."' ";
+        $curl_long  .= "--request '".$this->request_method."' ";
+
+        // request header
+        foreach ($stringHeader as $header) {
+            $curl_short .= "-H       '".$header."' ";
+            $curl_long  .= "--header '".$header."' ";
+            $wget_short .= "--header '".$header."' ";
+            $wget_long  .= "--header '".$header."' ";
+        }
+
+        // request body
+        $file_temp_name_request_body = tempnam(sys_get_temp_dir(), "req_body_curl_");
+        file_put_contents($file_temp_name_request_body, $this->request_body);
+        $curl_short .= "--data '@".$file_temp_name_request_body."' ";
+        $curl_long  .= "--data '@".$file_temp_name_request_body."' ";
+        $wget_short .= "--post-file='".$file_temp_name_request_body."' ";
+        $wget_long  .= "--post-file='".$file_temp_name_request_body."' ";
+
+        // ssl
+        if($this->ssl_verify && $this->is_https())
+        {
+            $temp = $this->ssl_cacert_file_path();
+            if(!empty($temp) && file_exists($this->ssl_cacert_file_path()))
+            {
+                $curl_short .= "--cacert '".$this->ssl_cacert_file_path()."' ";
+                $curl_long  .= "--cacert '".$this->ssl_cacert_file_path()."' ";
+                $wget_short .= "--ca-certificate='".$this->ssl_cacert_file_path()."' ";
+                $wget_long  .= "--ca-certificate='".$this->ssl_cacert_file_path()."' ";
+            }
+        }
+        else if(!$this->ssl_verify && $this->is_https())
+        {
+            $curl_short .= "-k ";
+            $curl_long  .= "--insecure ";
+            $wget_short .= "--no-check-certificate ";
+            $wget_long  .= "--no-check-certificate ";
+        }
+
+        // proxy
+        if(!empty($this->request_http_proxy))
+        {
+            $curl_short .= "-x      '".$this->request_http_proxy."' "; // ex: '-x      192.168.0.2:3128'
+            $curl_long  .= "--proxy '".$this->request_http_proxy."' "; // ex: '--proxy 192.168.0.2:3128'
+            $wget_short .= "-e        use_proxy=yes -e        http_proxy='".$this->request_http_proxy."' ";
+            $wget_long  .= "--execute use_proxy=yes --execute http_proxy='".$this->request_http_proxy."' ";
+            $wget_short = "http_proxy='".$this->request_http_proxy."' ".$wget_short;
+            $wget_long  = "http_proxy='".$this->request_http_proxy."' ".$wget_long;
+        }
+
+        // response body
+        $file_temp_name_response_body = tempnam(sys_get_temp_dir(), "resp_body_curl_");
+        $curl_short .= "-o       '".$file_temp_name_response_body."' ";
+        $curl_long  .= "--output '".$file_temp_name_response_body."' ";
+        $wget_short .= "-O                '".$file_temp_name_response_body."' ";
+        $wget_long  .= "--output-document '".$file_temp_name_response_body."' ";
+
+        // response code
+        $curl_short .= "-w          %{http_code} ";
+        $curl_long  .= "--write-out %{http_code} ";
+        // wget does not show response code (must be parsed manually)
+
+        // response header
+        $file_temp_name_response_header = tempnam(sys_get_temp_dir(), "resp_header_curl_");
+        $curl_short .= "-D            '".$file_temp_name_response_header."' ";
+        $curl_long  .= "--dump-header '".$file_temp_name_response_header."' ";
+        // wget does not show response header (must be parsed manually)
+
+        $stdout = shell_exec($curl_short);
+
+        if(is_numeric($stdout)) $this->response_code = $stdout;
+        $this->response_body = file_get_contents($file_temp_name_response_body);
+        $this->response_header = file_get_contents($file_temp_name_response_header);
+
+        // cleanup
+        unlink($file_temp_name_response_body);
+        unlink($file_temp_name_request_body);
+        unlink($file_temp_name_response_header);
+
+    }
+
     private function is_json($string)
     {
         json_decode($string);
