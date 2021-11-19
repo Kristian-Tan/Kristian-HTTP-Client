@@ -1,5 +1,8 @@
 <?php
 
+echo "phpversion() : " . phpversion();
+echo "phpinfo() : " . phpinfo();
+
 require_once("../KristianHTTPClient.php");
 
 function assertEq($expected, $real, $msg=null, $dumpOnError=null) {
@@ -109,6 +112,48 @@ $testParameters = array(
         "uriSchema" => "https://",
         "uriMethod" => "PUT",
         "api" => "curl",
+    ),
+    array(
+        "uriPathToCaptureRequest" => $uriPrefix."/capture_request_json.php", 
+        "uriHost" => $uriHost,
+        "uriSchema" => "http://",
+        "uriMethod" => "POST",
+        "api" => "gnu_curl",
+    ),
+    array(
+        "uriPathToCaptureRequest" => $uriPrefix."/capture_request_json.php", 
+        "uriHost" => $uriHost,
+        "uriSchema" => "https://",
+        "uriMethod" => "POST",
+        "api" => "gnu_curl",
+    ),
+    array(
+        "uriPathToCaptureRequest" => $uriPrefix."/capture_request_json.php", 
+        "uriHost" => $uriHost,
+        "uriSchema" => "http://",
+        "uriMethod" => "GET",
+        "api" => "gnu_curl",
+    ),
+    array(
+        "uriPathToCaptureRequest" => $uriPrefix."/capture_request_json.php", 
+        "uriHost" => $uriHost,
+        "uriSchema" => "https://",
+        "uriMethod" => "GET",
+        "api" => "gnu_curl",
+    ),
+    array(
+        "uriPathToCaptureRequest" => $uriPrefix."/capture_request_json.php", 
+        "uriHost" => $uriHost,
+        "uriSchema" => "http://",
+        "uriMethod" => "PUT",
+        "api" => "gnu_curl",
+    ),
+    array(
+        "uriPathToCaptureRequest" => $uriPrefix."/capture_request_json.php", 
+        "uriHost" => $uriHost,
+        "uriSchema" => "https://",
+        "uriMethod" => "PUT",
+        "api" => "gnu_curl",
     ),
 );
 

@@ -85,7 +85,7 @@ class KristianHTTPClient
         // make request
         $this->response_body = file_get_contents($this->request_url, false, stream_context_create($options));
         // get code
-        $status_line = $http_response_header[0];
+        $status_line = $http_response_header[0]; // https://www.php.net/manual/en/reserved.variables.httpresponseheader.php
         preg_match('{HTTP\/\S*\s(\d{3})}', $status_line, $match);
         $this->response_code = $match[1];
         // get headers

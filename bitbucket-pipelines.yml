@@ -15,8 +15,9 @@ pipelines:
               - pwd
               - cd tests
               - composer install
+              - id
               - date
-              - ./vendor/bin/hyper-run -S 0.0.0.0:80 -s 0.0.0.0:443 -t . &
+              - php ./vendor/bin/hyper-run -S 0.0.0.0:80 -s 0.0.0.0:443 -t . &
               - date
               - sleep 5
               - date
