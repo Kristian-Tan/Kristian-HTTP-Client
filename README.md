@@ -26,6 +26,7 @@ var_dump($client->response_code);
 - `ssl_cacert_file` = string (default "cacert.pem"), path to cacert file
 - `ssl_cacert_directory` = string (default "/etc/ssl/certs"), path to cacert directory (for curl api only)
 - `request_http_proxy` = string (if not set, will not use http proxy), http proxy to be used when making request (not socks proxy, since file_get_contents did not support it), should be filled with `host:port`
+- `request_http_timeout` = int (if not set, will not set any timeout / will use respective php_api's default), timeout in seconds
 
 ### Outputs
 - `response_code` = int

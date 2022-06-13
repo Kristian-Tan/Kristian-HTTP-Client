@@ -13,6 +13,7 @@ class KristianHTTPClient
     public $ssl_cacert_directory = "/etc/ssl/certs"; // use path to cacert directory
     public $ssl_verify = true; // change to false to disable ssl verification (insecure)
     public $request_http_proxy = null; // "localhost:3128" (for example: squid http proxy)
+    public $request_http_timeout = null; // null = use default, positive integer = number of second until request timed out
 
     // output
     public $response_code = 0; // 200, 404, ...
@@ -80,6 +81,10 @@ class KristianHTTPClient
         {
             $options["http"]["proxy"] = "tcp://".$this->request_http_proxy; // ex: 'tcp://192.168.0.2:3128'
             $options["http"]["request_fulluri"] = true;
+        }
+        if(is_numeric($this->request_http_timeout))
+        {
+            $options["http"]["timeout"] = $this->request_http_timeout;
         }
 
         // make request
@@ -194,6 +199,11 @@ class KristianHTTPClient
         if(!empty($this->request_http_proxy))
         {
             curl_setopt($ch, CURLOPT_PROXY, $this->request_http_proxy); // ex: 'tcp://192.168.0.2:3128'
+        }
+        if(is_numeric($this->request_http_timeout))
+        {
+            curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $this->request_http_timeout);
+            curl_setopt($ch, CURLOPT_TIMEOUT, $this->request_http_timeout);
         }
 
         $out = curl_exec($ch);
@@ -312,6 +322,15 @@ class KristianHTTPClient
             $wget_long  .= "--execute use_proxy=yes --execute http_proxy='".$this->request_http_proxy."' ";
             $wget_short = "http_proxy='".$this->request_http_proxy."' ".$wget_short;
             $wget_long  = "http_proxy='".$this->request_http_proxy."' ".$wget_long;
+        }
+
+        // timeout
+        if(is_numeric($this->request_http_timeout))
+        {
+            $curl_short .= "-m         '".$this->request_http_timeout."' --connect-timeout '".$this->request_http_timeout."' "; // ex: '-m         5 --connect-timeout 5'
+            $curl_long  .= "--max-time '".$this->request_http_timeout."' --connect-timeout '".$this->request_http_timeout."' "; // ex: '--max-time 5 --connect-timeout 5'
+            $wget_short .= "--timeout='".$this->request_http_timeout."' ";
+            $wget_long  .= "--timeout='".$this->request_http_timeout."' ";
         }
 
         // response body
