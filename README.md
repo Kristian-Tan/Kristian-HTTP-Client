@@ -27,11 +27,13 @@ var_dump($client->response_code);
 - `ssl_cacert_directory` = string (default "/etc/ssl/certs"), path to cacert directory (for curl api only)
 - `request_http_proxy` = string (if not set, will not use http proxy), http proxy to be used when making request (not socks proxy, since file_get_contents did not support it), should be filled with `host:port`
 - `request_http_timeout` = int (if not set, will not set any timeout / will use respective php_api's default), timeout in seconds
+- `debug` = string enum (can be null) or "var" or "echo", where: null = discard all debug information, "var" = save to variable, "echo" = print debug information to stdout/echo command
 
 ### Outputs
 - `response_code` = int
 - `response_body` = string
 - `response_header` = array (will be formatted in 2 dimensional array, example: `[["MyKey1"=>"MyValue1"],["MyKey2"=>"MyValue2"]]`)
+- `debug_output` = string, will only be written if `$client->debug="var";` is set
 
 ### Recommendations
 - use file_get_content api, it's more supported (no need to install php-curl extension) and more flexible (can use post body with GET method), but cannot use cacert directory (must be a single file)
