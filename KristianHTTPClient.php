@@ -15,6 +15,7 @@ class KristianHTTPClient
     public $request_http_proxy = null; // "localhost:3128" (for example: squid http proxy)
     public $request_http_timeout = null; // null = use default, positive integer = number of second until request timed out
     public $debug = null; // null = discard all debug information, "var" = save to variable, "echo" = print debug information to stdout/echo command
+    public $debug_level = "NONE"; // see map_debug_level
 
     // output
     public $response_code = 0; // 200, 404, ...
@@ -22,15 +23,23 @@ class KristianHTTPClient
     public $response_header = array();
     public $debug_output = "";
 
+    protected $map_debug_level = array(
+        "NONE" => 0, // do not print anything
+        "ERROR" => 1, // only show error
+        "WARNING" => 2, // only show warning and error (recoverable error, might actually work as intended)
+        "INFO" => 3, // informational message
+        "DEBUG" => 9, // all debug messages
+    );
+
     public function execute()
     {
         $method_name = "make_request_" . $this->php_api;
-        $this->debug_dump("http execute start");
-        $this->debug_dump("dump: ".print_r($this, true));
-        $this->debug_dump($method_name);
+        $this->debug_dump("http execute start", "INFO");
+        $this->debug_dump("dump: ".print_r($this, true), "DEBUG");
+        $this->debug_dump($method_name, "DEBUG");
         $this->$method_name();
-        $this->debug_dump("http execute end");
-        $this->debug_dump("dump: ".print_r($this, true));
+        $this->debug_dump("http execute end", "INFO");
+        $this->debug_dump("dump: ".print_r($this, true), "DEBUG");
     }
 
     private function make_request_file_get_contents()
@@ -60,7 +69,7 @@ class KristianHTTPClient
                 $stringHeader .= $header . "\r\n";
         }
 
-        $this->debug_dump("api (".$this->php_api."): header = ".print_r($stringHeader, true));
+        $this->debug_dump("api (".$this->php_api."): header = ".print_r($stringHeader, true), "DEBUG");
 
         // use key 'http' even if you send the request to https://...
         $options = array();
@@ -77,7 +86,7 @@ class KristianHTTPClient
             //$options["http"]["verify_peer_name"] = true;
             $options["ssl"]["verify_peer"] = true;
             $options["ssl"]["verify_peer_name"] = true;
-            $this->debug_dump("api (".$this->php_api."): SSL mode ON");
+            $this->debug_dump("api (".$this->php_api."): SSL mode ON", "DEBUG");
         }
         else if(!$this->ssl_verify && $this->is_https())
         {
@@ -85,27 +94,28 @@ class KristianHTTPClient
             //$options["http"]["verify_peer_name"] = false;
             $options["ssl"]["verify_peer"] = false;
             $options["ssl"]["verify_peer_name"] = false;
-            $this->debug_dump("api (".$this->php_api."): SSL mode OFF");
+            $this->debug_dump("api (".$this->php_api."): SSL mode OFF", "DEBUG");
         }
 
         if(!empty($this->request_http_proxy))
         {
             $options["http"]["proxy"] = "tcp://".$this->request_http_proxy; // ex: 'tcp://192.168.0.2:3128'
             $options["http"]["request_fulluri"] = true;
-            $this->debug_dump("api (".$this->php_api."): PROXY mode ON");
+            $this->debug_dump("api (".$this->php_api."): PROXY mode ON", "DEBUG");
         }
         if(is_numeric($this->request_http_timeout))
         {
             $options["http"]["timeout"] = $this->request_http_timeout;
-            $this->debug_dump("api (".$this->php_api."): TIMEOUT mode ON");
+            $this->debug_dump("api (".$this->php_api."): TIMEOUT mode ON", "DEBUG");
         }
 
         // make request
         $this->response_body = file_get_contents($this->request_url, false, stream_context_create($options));
-        $this->debug_dump("api (".$this->php_api."): completed");
+        $this->debug_dump("api (".$this->php_api."): completed", "INFO");
+        if($this->response_body === false) $this->debug_dump("api (".$this->php_api."): request failed", "ERROR");
         // get code
         $status_line = $http_response_header[0]; // https://www.php.net/manual/en/reserved.variables.httpresponseheader.php
-        $this->debug_dump("api (".$this->php_api."): http_response_header = ".print_r($http_response_header,true));
+        $this->debug_dump("api (".$this->php_api."): http_response_header = ".print_r($http_response_header,true), "DEBUG");
         preg_match('{HTTP\/\S*\s(\d{3})}', $status_line, $match);
         $this->response_code = $match[1];
         // get headers
@@ -114,17 +124,17 @@ class KristianHTTPClient
             if(strpos($http_response_header[$i], ": ") !== false)
             {
                 $this->response_header[] = explode(": ", $http_response_header[$i]);
-                $this->debug_dump("api (".$this->php_api."): reponse header type 1 parsed");
+                $this->debug_dump("api (".$this->php_api."): reponse header type 1 parsed", "DEBUG");
             }
             else if(strpos($http_response_header[$i], ":") !== false)
             {
                 $this->response_header[] = explode(":", $http_response_header[$i]);
-                $this->debug_dump("api (".$this->php_api."): reponse header type 2 parsed");
+                $this->debug_dump("api (".$this->php_api."): reponse header type 2 parsed", "DEBUG");
             }
             else if($header[$i] != "")
             {
                 $this->response_header[] = $http_response_header[$i];
-                $this->debug_dump("api (".$this->php_api."): reponse header type 3 parsed");
+                $this->debug_dump("api (".$this->php_api."): reponse header type 3 parsed", "DEBUG");
             }
         }
     }
@@ -135,18 +145,18 @@ class KristianHTTPClient
         if(!empty($tryport) && empty($this->request_port))
         {
             $this->request_port = $tryport;
-            $this->debug_dump("api (".$this->php_api."): port parsed from url: ".$tryport);
+            $this->debug_dump("api (".$this->php_api."): port parsed from url: ".$tryport, "DEBUG");
         }
 
         if( $this->is_json($this->request_body) )
         {
             $this->request_header[] = array("Content-type", "application/json");
-            $this->debug_dump("api (".$this->php_api."): JSON mode ON");
+            $this->debug_dump("api (".$this->php_api."): JSON mode ON", "DEBUG");
         }
         else if( $this->request_body != null && $this->request_body != "" )
         {
             $this->request_header[] = array("Content-type", "application/x-www-form-urlencoded");
-            $this->debug_dump("api (".$this->php_api."): FORM mode ON");
+            $this->debug_dump("api (".$this->php_api."): FORM mode ON", "DEBUG");
         }
         
         $arrHeaders = array();
@@ -157,19 +167,19 @@ class KristianHTTPClient
             else
                 $arrHeaders[] = $header;
         }
-        $this->debug_dump("api (".$this->php_api."): header = ".print_r($arrHeaders, true));
+        $this->debug_dump("api (".$this->php_api."): header = ".print_r($arrHeaders, true), "DEBUG");
 
         if( $this->request_body == null )
         {
             $this->request_body = "";
-            $this->debug_dump("api (".$this->php_api."): body initialized with empty string");
+            $this->debug_dump("api (".$this->php_api."): body initialized with empty string", "DEBUG");
         }
 
         $verbose = 0;
         if($this->debug == "echo")
         {
             $verbose = 1;
-            $this->debug_dump("api (".$this->php_api."): CURLOPT_VERBOSE mode ON");
+            $this->debug_dump("api (".$this->php_api."): CURLOPT_VERBOSE mode ON", "DEBUG");
         }
 
         $ch = curl_init($this->request_url);
@@ -191,19 +201,19 @@ class KristianHTTPClient
                 if(!empty($temp)) curl_setopt ($ch, CURLOPT_CAINFO, $this->ssl_cacert_file_path());
                 $temp = $this->ssl_cacert_directory_path();
                 if(!empty($temp)) curl_setopt ($ch, CURLOPT_CAPATH, $this->ssl_cacert_directory_path());
-                $this->debug_dump("api (".$this->php_api."): SSL mode ON");
+                $this->debug_dump("api (".$this->php_api."): SSL mode ON", "DEBUG");
             }
             else
             {
                 curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
                 curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-                $this->debug_dump("api (".$this->php_api."): SSL mode OFF");
+                $this->debug_dump("api (".$this->php_api."): SSL mode OFF", "DEBUG");
             }
         }
         else
         {
             curl_setopt($ch, CURLOPT_PORT, 80);
-            $this->debug_dump("api (".$this->php_api."): SSL mode NONE");
+            $this->debug_dump("api (".$this->php_api."): SSL mode NONE", "DEBUG");
         }
         if(!empty($this->request_port))
         {
@@ -239,36 +249,37 @@ class KristianHTTPClient
         else
         {
             curl_setopt($ch, CURLOPT_CUSTOMREQUEST, strtoupper($this->request_method));
-            $this->debug_dump("api (".$this->php_api."): set to CURLOPT_CUSTOMREQUEST method = ".strtoupper($this->request_method));
+            $this->debug_dump("api (".$this->php_api."): set to CURLOPT_CUSTOMREQUEST method = ".strtoupper($this->request_method), "DEBUG");
         }
 
         if(!empty($this->request_http_proxy))
         {
             curl_setopt($ch, CURLOPT_PROXY, $this->request_http_proxy); // ex: 'tcp://192.168.0.2:3128'
-            $this->debug_dump("api (".$this->php_api."): PROXY mode ON");
+            $this->debug_dump("api (".$this->php_api."): PROXY mode ON", "DEBUG");
         }
         if(is_numeric($this->request_http_timeout))
         {
             curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $this->request_http_timeout);
             curl_setopt($ch, CURLOPT_TIMEOUT, $this->request_http_timeout);
-            $this->debug_dump("api (".$this->php_api."): TIMEOUT mode ON");
+            $this->debug_dump("api (".$this->php_api."): TIMEOUT mode ON", "DEBUG");
         }
 
         $out = curl_exec($ch);
-        $this->debug_dump("api (".$this->php_api."): completed");
+        $this->debug_dump("api (".$this->php_api."): completed", "INFO");
+        if($out === false) $this->debug_dump("api (".$this->php_api."): request failed", "ERROR");
         //echo "out"; var_dump($out);
         //echo "ch"; var_dump($ch);
         //echo "chinfo"; var_dump(curl_getinfo($ch));
         //echo "error"; var_dump(curl_error($ch));
 
         $response = $out;
-        $this->debug_dump("api (".$this->php_api."): out = ".$out);
+        $this->debug_dump("api (".$this->php_api."): out = ".$out, "DEBUG");
         $header_size = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
-        $this->debug_dump("api (".$this->php_api."): header_size = ".$header_size);
+        $this->debug_dump("api (".$this->php_api."): header_size = ".$header_size, "DEBUG");
         $header = substr($response, 0, $header_size);
-        $this->debug_dump("api (".$this->php_api."): http_response_header = ".print_r($header,true));
+        $this->debug_dump("api (".$this->php_api."): http_response_header = ".print_r($header,true), "DEBUG");
         $body = substr($response, $header_size);
-        $this->debug_dump("api (".$this->php_api."): http_response_body = ".print_r($body,true));
+        $this->debug_dump("api (".$this->php_api."): http_response_body = ".print_r($body,true), "DEBUG");
         $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
         curl_close($ch);
@@ -281,17 +292,17 @@ class KristianHTTPClient
             if(strpos($header[$i], ": ") !== false)
             {
                 $this->response_header[] = explode(": ", $header[$i]);
-                $this->debug_dump("api (".$this->php_api."): reponse header type 1 parsed");
+                $this->debug_dump("api (".$this->php_api."): reponse header type 1 parsed", "DEBUG");
             }
             else if(strpos($header[$i], ":") !== false)
             {
                 $this->response_header[] = explode(":", $header[$i]);
-                $this->debug_dump("api (".$this->php_api."): reponse header type 2 parsed");
+                $this->debug_dump("api (".$this->php_api."): reponse header type 2 parsed", "DEBUG");
             }
             else if($header[$i] != "")
             {
                 $this->response_header[] = $header[$i];
-                $this->debug_dump("api (".$this->php_api."): reponse header type 3 parsed");
+                $this->debug_dump("api (".$this->php_api."): reponse header type 3 parsed", "DEBUG");
             }
         }
     }
@@ -306,17 +317,17 @@ class KristianHTTPClient
         if( $this->is_json($this->request_body) )
         {
             $this->request_header[] = array("Content-type", "application/json");
-            $this->debug_dump("api (".$this->php_api."): JSON mode ON");
+            $this->debug_dump("api (".$this->php_api."): JSON mode ON", "DEBUG");
         }
         else if( $this->request_body != null && $this->request_body != "" )
         {
             $this->request_header[] = array("Content-type", "application/x-www-form-urlencoded");
-            $this->debug_dump("api (".$this->php_api."): FORM mode ON");
+            $this->debug_dump("api (".$this->php_api."): FORM mode ON", "DEBUG");
         }
         if( $this->request_body == null )
         {
             $this->request_body = "";
-            $this->debug_dump("api (".$this->php_api."): body initialized with empty string");
+            $this->debug_dump("api (".$this->php_api."): body initialized with empty string", "DEBUG");
         }
 
         $stringHeader = array();
@@ -328,14 +339,14 @@ class KristianHTTPClient
             else
                 $stringHeader[] = $header;
         }
-        $this->debug_dump("api (".$this->php_api."): header = ".print_r($stringHeader, true));
+        $this->debug_dump("api (".$this->php_api."): header = ".print_r($stringHeader, true), "DEBUG");
 
         // sanitize (because it will be executed on os shell)
         $this->request_url = str_replace("'", "", $this->request_url);
         $this->request_method = str_replace("'", "", $this->request_method);
         foreach ($this->request_header as $key => $value) $this->request_header[$key] = str_replace("'", "", $value);
         $this->request_http_proxy = str_replace("'", "", $this->request_http_proxy);
-        $this->debug_dump("api (".$this->php_api."): dump after sanitized for shell = ".print_r($this, true));
+        $this->debug_dump("api (".$this->php_api."): dump after sanitized for shell = ".print_r($this, true), "DEBUG");
 
 
         $curl_short = "curl '".$this->request_url."' ";
@@ -358,7 +369,7 @@ class KristianHTTPClient
         // request body
         $file_temp_name_request_body = tempnam(sys_get_temp_dir(), "req_body_curl_");
         $file_put_contents = file_put_contents($file_temp_name_request_body, $this->request_body);
-        $this->debug_dump("api (".$this->php_api."): saving request_body to temp file: ".$file_temp_name_request_body." , bytes written: ".print_r($file_put_contents,true));
+        $this->debug_dump("api (".$this->php_api."): saving request_body to temp file: ".$file_temp_name_request_body." , bytes written: ".print_r($file_put_contents,true), "DEBUG");
 
         $curl_short .= "--data '@".$file_temp_name_request_body."' ";
         $curl_long  .= "--data '@".$file_temp_name_request_body."' ";
@@ -375,7 +386,7 @@ class KristianHTTPClient
                 $curl_long  .= "--cacert '".$this->ssl_cacert_file_path()."' ";
                 $wget_short .= "--ca-certificate='".$this->ssl_cacert_file_path()."' ";
                 $wget_long  .= "--ca-certificate='".$this->ssl_cacert_file_path()."' ";
-                $this->debug_dump("api (".$this->php_api."): SSL mode ON");
+                $this->debug_dump("api (".$this->php_api."): SSL mode ON", "DEBUG");
             }
         }
         else if(!$this->ssl_verify && $this->is_https())
@@ -384,7 +395,7 @@ class KristianHTTPClient
             $curl_long  .= "--insecure ";
             $wget_short .= "--no-check-certificate ";
             $wget_long  .= "--no-check-certificate ";
-            $this->debug_dump("api (".$this->php_api."): SSL mode OFF");
+            $this->debug_dump("api (".$this->php_api."): SSL mode OFF", "DEBUG");
         }
 
         // proxy
@@ -396,7 +407,7 @@ class KristianHTTPClient
             $wget_long  .= "--execute use_proxy=yes --execute http_proxy='".$this->request_http_proxy."' ";
             $wget_short = "http_proxy='".$this->request_http_proxy."' ".$wget_short;
             $wget_long  = "http_proxy='".$this->request_http_proxy."' ".$wget_long;
-            $this->debug_dump("api (".$this->php_api."): PROXY mode ON");
+            $this->debug_dump("api (".$this->php_api."): PROXY mode ON", "DEBUG");
         }
 
         // timeout
@@ -406,12 +417,12 @@ class KristianHTTPClient
             $curl_long  .= "--max-time '".$this->request_http_timeout."' --connect-timeout '".$this->request_http_timeout."' "; // ex: '--max-time 5 --connect-timeout 5'
             $wget_short .= "--timeout='".$this->request_http_timeout."' ";
             $wget_long  .= "--timeout='".$this->request_http_timeout."' ";
-            $this->debug_dump("api (".$this->php_api."): TIMEOUT mode ON");
+            $this->debug_dump("api (".$this->php_api."): TIMEOUT mode ON", "DEBUG");
         }
 
         // response body
         $file_temp_name_response_body = tempnam(sys_get_temp_dir(), "resp_body_curl_");
-        $this->debug_dump("api (".$this->php_api."): directing response_body to temp file: ".$file_temp_name_response_body);
+        $this->debug_dump("api (".$this->php_api."): directing response_body to temp file: ".$file_temp_name_response_body, "DEBUG");
 
         $curl_short .= "-o       '".$file_temp_name_response_body."' ";
         $curl_long  .= "--output '".$file_temp_name_response_body."' ";
@@ -425,7 +436,7 @@ class KristianHTTPClient
 
         // response header
         $file_temp_name_response_header = tempnam(sys_get_temp_dir(), "resp_header_curl_");
-        $this->debug_dump("api (".$this->php_api."): directing response_header to temp file: ".$file_temp_name_response_header);
+        $this->debug_dump("api (".$this->php_api."): directing response_header to temp file: ".$file_temp_name_response_header, "DEBUG");
 
         $curl_short .= "-D            '".$file_temp_name_response_header."' ";
         $curl_long  .= "--dump-header '".$file_temp_name_response_header."' ";
@@ -438,34 +449,34 @@ class KristianHTTPClient
             $curl_long  .= " 2> '".$file_temp_name_stderr."' ";
             $wget_short .= " 2> '".$file_temp_name_stderr."' ";
             $wget_long  .= " 2> '".$file_temp_name_stderr."' ";
-            $this->debug_dump("api (".$this->php_api."): directing STDERR to temp file: ".$file_temp_name_stderr);
+            $this->debug_dump("api (".$this->php_api."): directing STDERR to temp file: ".$file_temp_name_stderr, "DEBUG");
         }
 
-        $this->debug_dump("api (".$this->php_api."): shell command curl_short (used) = ".$curl_short);
-        $this->debug_dump("api (".$this->php_api."): shell command curl_long (alternative 1) = ".$curl_long);
-        $this->debug_dump("api (".$this->php_api."): shell command wget_short (just for comparison, not feature complete) = ".$wget_short);
-        $this->debug_dump("api (".$this->php_api."): shell command wget_long (just for comparison, not feature complete) = ".$wget_long);
+        $this->debug_dump("api (".$this->php_api."): shell command curl_short (used) = ".$curl_short, "DEBUG");
+        $this->debug_dump("api (".$this->php_api."): shell command curl_long (alternative 1) = ".$curl_long, "DEBUG");
+        $this->debug_dump("api (".$this->php_api."): shell command wget_short (just for comparison, not feature complete) = ".$wget_short, "DEBUG");
+        $this->debug_dump("api (".$this->php_api."): shell command wget_long (just for comparison, not feature complete) = ".$wget_long, "DEBUG");
         $stdout = shell_exec($curl_short);
-        $this->debug_dump("api (".$this->php_api."): completed");
+        $this->debug_dump("api (".$this->php_api."): completed", "INFO");
         if(!empty($file_temp_name_stderr) && is_string($file_temp_name_stderr))
         {
-            $this->debug_dump("api (".$this->php_api."): STDERR content: ".file_get_contents($file_temp_name_stderr));
+            $this->debug_dump("api (".$this->php_api."): STDERR content: ".file_get_contents($file_temp_name_stderr), "WARNING");
         }
 
         if(is_numeric($stdout)) $this->response_code = $stdout;
-        else $this->debug_dump("api (".$this->php_api."): stdout not numeric = ".$stdout);
+        else $this->debug_dump("api (".$this->php_api."): stdout not numeric = ".$stdout, "ERROR");
         $this->response_body = file_get_contents($file_temp_name_response_body);
-        if($this->response_body === false) $this->debug_dump("api (".$this->php_api."): cannot read temp file response_body");
+        if($this->response_body === false) $this->debug_dump("api (".$this->php_api."): cannot read temp file response_body", "ERROR");
         $this->response_header = file_get_contents($file_temp_name_response_header);
-        if($this->response_header === false) $this->debug_dump("api (".$this->php_api."): cannot read temp file response_header");
+        if($this->response_header === false) $this->debug_dump("api (".$this->php_api."): cannot read temp file response_header", "ERROR");
 
         // cleanup
         $unlink = unlink($file_temp_name_response_body);
-        if($unlink === false) $this->debug_dump("api (".$this->php_api."): cannot delete temp file response_body");
+        if($unlink === false) $this->debug_dump("api (".$this->php_api."): cannot delete temp file response_body", "WARNING");
         $unlink = unlink($file_temp_name_request_body);
-        if($unlink === false) $this->debug_dump("api (".$this->php_api."): cannot delete temp file request_body");
+        if($unlink === false) $this->debug_dump("api (".$this->php_api."): cannot delete temp file request_body", "WARNING");
         $unlink = unlink($file_temp_name_response_header);
-        if($unlink === false) $this->debug_dump("api (".$this->php_api."): cannot delete temp file response_header");
+        if($unlink === false) $this->debug_dump("api (".$this->php_api."): cannot delete temp file response_header", "WARNING");
 
     }
 
@@ -498,8 +509,10 @@ class KristianHTTPClient
         else return null;
     }
 
-    protected function debug_dump($string)
+    protected function debug_dump($string, $level)
     {
+        if( $this->map_debug_level[$level] > $this->map_debug_level[$this->debug_level] ) return;
+
         if(is_null($this->debug)) return;
         else if($this->debug == "echo") { echo $string."\r\n"; return; }
         else if($this->debug == "var") { $this->debug_output .= $string."\r\n" ; return; }
