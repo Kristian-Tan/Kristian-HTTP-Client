@@ -17,18 +17,24 @@ var_dump($client->response_code);
 
 ### Inputs
 - `request_url` = string
-- `request_port` = int (if not set, will default to 80 for http and 443 for https)
-- `request_header` = array (default empty array), should be filled with `["MyKey1: MyValue1","MyKey2: MyValue2"] `
-- `request_method` = string (default "GET")
-- `request_body` = string (default null), request body (also called post variable) that can be assigned to contain json (must not be set if using curl api with http GET method)
-- `php_api` = string enum "file_get_contents" or "curl" or "gnu_curl" (default "file_get_contents"), php api to be used when making request
-- `ssl_verify` = boolean (default true),
-- `ssl_cacert_file` = string (default "cacert.pem"), path to cacert file
-- `ssl_cacert_directory` = string (default "/etc/ssl/certs"), path to cacert directory (for curl api only)
-- `request_http_proxy` = string (if not set, will not use http proxy), http proxy to be used when making request (not socks proxy, since file_get_contents did not support it), should be filled with `host:port`
-- `request_http_timeout` = int (if not set, will not set any timeout / will use respective php_api's default), timeout in seconds
-- `debug` = string enum (can be null) or "var" or "echo", where: null = discard all debug information, "var" = save to variable, "echo" = print debug information to stdout/echo command
-- `debug_level` = string enum "NONE","ERROR","WARNING","INFO","DEBUG"
+- `request_port` = int (if not set, will default to `80` for http and `443` for https)
+- `request_header` = array (default empty array), should be filled with either:
+    - `array("MyKey1: MyValue1","MyKey2: MyValue2") `, or
+    - `array("MyKey1" => "MyValue1","MyKey2" => "MyValue2")`
+- `request_method` = string (default `"GET"`)
+- `request_body` = string (default `null`), request body (also called post variable) that can be assigned to contain json (must not be set if using curl api with http GET method)
+- `php_api` = string enum `"file_get_contents"` or `"curl"` or `"gnu_curl"` (default `"file_get_contents"`), php api to be used when making request
+- `ssl_verify` = boolean (default `true`),
+- `ssl_cacert_file` = string (default `"cacert.pem"`), path to cacert file
+- `ssl_cacert_directory` = string (default `"/etc/ssl/certs"`), path to cacert directory (for curl api only)
+- `request_http_proxy` = string (if not set, will not use http proxy), http proxy to be used when making request (not SOCKS proxy, SOCKS not supported), format `host:port`
+- `request_http_timeout` = int (if not set, will use respective php_api's default), timeout in seconds
+- `debug` = string enum (default `null`) or `"var"` or `"echo"` or a function/callable, where:
+    - `null` = discard all debug information,
+    - `"var"` = save to variable,
+    - `"echo"` = print debug information to stdout/echo command,
+    - function/callable = call the function/callable, with first argument containing multiline string containing all debug information
+- `debug_level` = string enum (default `"NONE"`), enum `"NONE"`,`"ERROR"`,`"WARNING"`,`"INFO"`,`"DEBUG"`
 
 ### Outputs
 - `response_code` = int
@@ -58,3 +64,42 @@ var_dump($client->response_code);
 - first, install curl via your package manager (or if you don't have root or if your package manager is no longer supported, download a statically linked curl binary from https://github.com/moparisthebest/static-curl)
 - set the permission of curl binary to be executable (it should be automatic if installing via package manager, otherwise it can be done with: ```chmod a+x ./bin/curl```, assuming you put it in ./bin inside your php directory)
 - add the directory that contains curl binary to PATH variable (it should be automatic if installing via package manager, otherwise it can be done with such php code: ```putenv("PATH=".getenv("PATH").":".getcwd()."/bin");```, assuming you put it in ./bin inside your php directory)
+
+### Debugging/Logging Example
+- save debug information to variable, then dump it:
+```php
+<?php
+$client = new KristianHTTPClient();
+$client->request... = ...;
+
+$client->debug = "var"; // save debug information to variable $client->debug_output
+$client->debug_level = "DEBUG"; // highest/most verbose debug
+$client->execute();
+var_dump($client->debug_output);
+```
+
+- print debug information (simple):
+```php
+<?php
+$client = new KristianHTTPClient();
+$client->request... = ...;
+
+$client->debug = "echo"; // just print the debug information
+$client->debug_level = "DEBUG"; // highest/most verbose debug
+$client->execute();
+```
+
+- do something to the debug information (example: log to syslog):
+```php
+<?php
+$client = new KristianHTTPClient();
+$client->request... = ...;
+
+$client->debug = function($string) {
+    openlog("kristian-http-client", LOG_NDELAY, LOG_LOCAL4);
+    syslog(LOG_DEBUG, $string);
+    closelog();
+};
+$client->debug_level = "DEBUG"; // highest/most verbose debug
+$client->execute();
+```
