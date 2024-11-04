@@ -43,4 +43,4 @@ jobs:
         composer install --prefer-dist --no-progress --no-suggest
         sudo ./vendor/bin/hyper-run -S 0.0.0.0:80 -s 0.0.0.0:443 -t . &
         sleep 20
-        php run.php -hlocalhost -p
+        php run.php -hlocalhost -p 2>&1

@@ -1,5 +1,5 @@
 {
-    "name": "kristian-tan/kristian-http-client",
+    "name": "kristian-tan/http-client",
     "description": "Synchronous HTTP client for php. Only a simple abstraction over php's curl and file_get_contents API.",
     "require-dev": {
         "mpyw/php-hyper-builtin-server": "^3.0"

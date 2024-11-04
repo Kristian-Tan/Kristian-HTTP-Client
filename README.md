@@ -7,13 +7,29 @@
 - PHP 5.3 minimum above is only assumed because it's the lowest php version this library has been tested against, if its known to be compatible with lower version, please report so I can update the above information
 
 ## Usage
+- without composer:
+    - download file `src/HTTPClient.php`, then rename it into `KristianHTTPClient.php`
+    - optionally, rename class into `KristianHTTPClient` by editing `KristianHTTPClient.php`, or, just import it with alias e.g.: `use KristianTan\HTTPClient as KristianHTTPClient`
+    - note: `KristianHTTPClient` is old name before using composer and namespace, importing `KristianTan\HTTPClient` with alias is intended to maintain backward compatibility
 ```php
 require_once("KristianHTTPClient.php");
+use KristianTan\HTTPClient as KristianHTTPClient;
 $client = new KristianHTTPClient();
 $client->request_url = "http://localhost/www/index.php";
 $client->execute();
 var_dump($client->response_code);
 ```
+- using composer:
+    - `composer require kristian-tan/http-client`
+```php
+require_once("vendor/autoload.php");
+use KristianTan\HTTPClient as KristianHTTPClient;
+$client = new KristianHTTPClient();
+$client->request_url = "http://localhost/www/index.php";
+$client->execute();
+var_dump($client->response_code);
+```
+
 
 ### Inputs
 - `request_url` = string

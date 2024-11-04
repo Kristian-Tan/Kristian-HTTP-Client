@@ -1,0 +1,18 @@
+{
+    "name": "kristian-tan/http-client",
+    "description": "Synchronous HTTP client for php. Only a simple abstraction over php's curl and file_get_contents API. Compatible with very old PHP (e.g.: php5)",
+    "type": "library",
+    "autoload": {
+        "psr-4": {
+            "KristianTan\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Kristian Tanuwijaya",
+            "email": "tanuwijaya.kristian@gmail.com"
+        }
+    ],
+    "minimum-stability": "stable",
+    "require": {}
+}

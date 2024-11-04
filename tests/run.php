@@ -1,9 +1,9 @@
 <?php
 
 echo "phpversion() : " . phpversion();
-echo "phpinfo() : " . phpinfo();
+// echo "  phpinfo() : " . phpinfo();
 
-require_once("../KristianHTTPClient.php");
+require_once("../src/HTTPClient.php");
 
 function assertEq($expected, $real, $msg=null, $dumpOnError=null) {
 	if(empty($msg)) $msg = "";
@@ -183,7 +183,7 @@ foreach ($testParameters as $idx => $testParameter) {
     $rand1 = rand();
     $rand2 = rand();
 
-    $client = new KristianHTTPClient();
+    $client = new \KristianTan\HTTPClient();
     $client->request_url = $uriSchema.$uriHost.$uriPathToCaptureRequest;
     $client->request_header = array(
         "Custom-Header-1: custom-value-1",
